@@ -63,6 +63,13 @@ jobs:
             xcrun simctl shutdown "$UDID"
           done
           ls -l screenshots
+      - name: Print screenshots to log (for environments that cannot fetch artifacts)
+        run: |
+          for f in screenshots/*.png; do
+            n=$(basename "$f" .png)
+            sips -Z 1400 "$f" --out "/tmp/$n.png" >/dev/null
+            base64 -i "/tmp/$n.png" | fold -w 100 | sed "s/^/SHOT-$n:/"
+          done
       - uses: actions/upload-artifact@v4
         with:
           name: screenshots
