@@ -428,7 +428,7 @@ public struct TruncateSilence: AudioEffect {
     public let id = "truncatesilence"
     public let name = "Truncate Silence"
     public var parameters: [EffectParameter] {
-        [EffectParameter("threshold", "Threshold", .slider(-80...-20, step: 1, unit: "dB"), default: -40),
+        [EffectParameter("threshold", "Threshold", .slider((-80)...(-20), step: 1, unit: "dB"), default: -40),
          EffectParameter("minimum", "Duration at least", .slider(0.05...10, step: 0.01, unit: "s"), default: 0.5),
          EffectParameter("truncate", "Truncate to", .slider(0...10, step: 0.01, unit: "s"), default: 0.3)]
     }

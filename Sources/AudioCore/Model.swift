@@ -9,7 +9,7 @@ public extension Array where Element == [Float] {
 
     /// Planar silence.
     static func silence(channels: Int, frames: Int) -> PlanarAudio {
-        Array(repeating: [Float](repeating: 0, count: max(0, frames)), count: max(1, channels))
+        Array(repeating: [Float](repeating: 0, count: Swift.max(0, frames)), count: Swift.max(1, channels))
     }
 }
 
