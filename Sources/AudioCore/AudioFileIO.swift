@@ -124,7 +124,16 @@ public enum ProjectArchive {
         try enc.encode(manifest).write(to: tmp.appendingPathComponent(manifestName))
         // Atomic swap so a crash mid-save never corrupts the previous version.
         if fm.fileExists(atPath: url.path) {
-            _ = try fm.replaceItemAt(url, withItemAt: tmp)
+            let backup = url.deletingLastPathComponent()
+                .appendingPathComponent(".\(url.lastPathComponent).old-\(UUID().uuidString)")
+            try fm.moveItem(at: url, to: backup)
+            do {
+                try fm.moveItem(at: tmp, to: url)
+            } catch {
+                try? fm.moveItem(at: backup, to: url) // restore the previous version
+                throw error
+            }
+            try? fm.removeItem(at: backup)
         } else {
             try fm.moveItem(at: tmp, to: url)
         }
