@@ -18,7 +18,7 @@ jobs:
 
   ios:
     name: iOS app build + package tests (macOS)
-    runs-on: macos-14
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - name: Swift package tests
