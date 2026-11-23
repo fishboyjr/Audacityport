@@ -1,0 +1,8 @@
+.build/
+.build-host/
+.swiftpm/
+*.xcodeproj/
+xcuserdata/
+DerivedData/
+App/Info.plist
+.DS_Store
