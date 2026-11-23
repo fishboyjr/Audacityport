@@ -30,3 +30,40 @@ jobs:
           xcodebuild build -project AudioPort.xcodeproj -scheme AudioPort \
             -destination 'generic/platform=iOS Simulator' \
             CODE_SIGNING_ALLOWED=NO -quiet
+
+  screenshots:
+    name: Simulator screenshots
+    runs-on: macos-latest
+    needs: ios
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build app for simulator
+        run: |
+          brew install xcodegen && xcodegen
+          xcodebuild build -project AudioPort.xcodeproj -scheme AudioPort \
+            -destination 'generic/platform=iOS Simulator' -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO -quiet
+      - name: Capture iPhone and iPad screenshots
+        run: |
+          APP=$(find build/Build/Products -name 'AudioPort.app' -maxdepth 3 | head -1)
+          mkdir -p screenshots
+          for family in iPhone iPad; do
+            UDID=$(xcrun simctl list devices available -j | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)['devices']
+          c=[x for k,v in d.items() if 'iOS' in k for x in v if x['name'].startswith('$family') and 'Pro' in x['name']]
+          print(c[-1]['udid'])")
+            xcrun simctl boot "$UDID"
+            xcrun simctl bootstatus "$UDID" -b
+            xcrun simctl status_bar "$UDID" override --time 9:41 --batteryState charged --batteryLevel 100 || true
+            xcrun simctl install "$UDID" "$APP"
+            xcrun simctl launch "$UDID" com.example.audioport -demo
+            sleep 12
+            xcrun simctl io "$UDID" screenshot "screenshots/$family.png"
+            xcrun simctl shutdown "$UDID"
+          done
+          ls -l screenshots
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: screenshots/

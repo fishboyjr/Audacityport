@@ -14,7 +14,14 @@ struct AudioPortApp: App {
                     // Crash/termination safety, like the desktop autosave journal.
                     if phase == .background { model.autosave() }
                 }
-                .task { model.restoreAutosaveIfNeeded() }
+                .task {
+                    // `-demo` (used by CI screenshots) opens a generated sample project.
+                    if CommandLine.arguments.contains("-demo") {
+                        await model.loadDemo()
+                    } else {
+                        model.restoreAutosaveIfNeeded()
+                    }
+                }
         }
     }
 }
