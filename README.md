@@ -61,13 +61,83 @@ project.yml           XcodeGen spec for the iOS app target
 
 ## Building
 
-Requirements: Xcode 15.4+ (iOS 17 SDK), [XcodeGen](https://github.com/yonaskolb/XcodeGen).
+### 1. What you need
+
+- A Mac with a recent macOS and **Xcode 15.4 or later** (iOS 17 SDK). CI builds with the
+  runner's default Xcode.
+- To run on a phone or iPad: a device on **iOS/iPadOS 17 or later** and an **Apple ID**.
+  A free Apple ID works; a paid developer account is only needed for TestFlight / App Store.
+- [Homebrew](https://brew.sh), to install XcodeGen.
+
+### 2. Set up Xcode (first time only)
+
+1. Install Xcode from the Mac App Store and open it once so it can install its components.
+2. Add the iOS platform if prompted (Xcode › Settings › Components › iOS).
+3. In Terminal: `sudo xcode-select -s /Applications/Xcode.app` then `sudo xcodebuild -license accept`.
+4. Add your Apple ID: Xcode › Settings › Accounts › **+** › Apple ID.
+
+### 3. Get the code and generate the project
+
+The Xcode project is generated from `project.yml` and is not checked in.
 
 ```sh
 brew install xcodegen
-xcodegen                 # generates AudioPort.xcodeproj
-open AudioPort.xcodeproj # choose a team for signing, run on device or simulator
+git clone https://github.com/fishboyjr/Audacityport.git
+cd Audacityport
+xcodegen                  # writes AudioPort.xcodeproj
+open AudioPort.xcodeproj
 ```
+
+Run `xcodegen` again whenever you pull changes that add, remove or rename source files.
+It rewrites the project, so put lasting settings in `project.yml`, not in Xcode.
+
+### 4a. Run in the Simulator (no signing needed)
+
+Pick the **AudioPort** scheme and an iPhone or iPad simulator in the toolbar, then press **⌘R**.
+The simulator records from the Mac's microphone.
+
+### 4b. Run on your iPhone or iPad
+
+1. **Use your own bundle ID.** `com.example.audioport` cannot be registered. In `project.yml`,
+   change `PRODUCT_BUNDLE_IDENTIFIER` to something unique such as `com.yourname.audioport`,
+   and optionally add `DEVELOPMENT_TEAM: <your team ID>` on the next line so the team
+   survives regeneration (Xcode › Settings › Accounts › your team shows the ID). Run `xcodegen`.
+2. **Choose a team.** In Xcode select the blue **AudioPort** project › target **AudioPort** ›
+   **Signing & Capabilities**, tick *Automatically manage signing*, and choose your team
+   (a free account shows as "Your Name (Personal Team)").
+3. **Prepare the device.** Connect it by cable, unlock it and tap *Trust*. On iOS 16+ turn on
+   Settings › Privacy & Security › **Developer Mode** and restart when asked.
+4. **Run.** Select the device in Xcode's toolbar and press **⌘R**.
+5. **First launch on a free account:** iOS blocks the app until you trust the developer at
+   Settings › General › VPN & Device Management › your Apple ID › *Trust*. Then launch again.
+6. Allow microphone access when the app first records.
+
+With a free (Personal Team) account, apps stop launching after **7 days**; run again from
+Xcode to renew. A paid Apple Developer Program membership removes that limit.
+
+### Demo project
+
+To open the generated sample project used for screenshots: Product › Scheme › Edit Scheme ›
+Run › Arguments › *Arguments Passed On Launch* › add `-demo`.
+
+### Command-line build
+
+```sh
+xcodebuild build -project AudioPort.xcodeproj -scheme AudioPort \
+  -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO
+```
+
+### Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| `xcodegen: command not found` | Install Homebrew, then `brew install xcodegen`. |
+| "No such module 'AudioCore'" | File › Packages › Reset Package Caches, then build again. The package is local (this repository), so no download is needed. |
+| "Failed to register bundle identifier" | The bundle ID is taken; change `PRODUCT_BUNDLE_IDENTIFIER` in `project.yml` and rerun `xcodegen`. |
+| "Signing for AudioPort requires a development team" | Choose a team in Signing & Capabilities (step 4b.2). |
+| Team or bundle ID resets after `xcodegen` | Put them in `project.yml` instead of Xcode (step 4b.1). |
+| Device shows "Untrusted Developer" | Trust it under Settings › General › VPN & Device Management. |
+| Device not listed in Xcode | Unlock it, accept *Trust This Computer*, enable Developer Mode, and check it runs iOS 17+. |
 
 Tests:
 
